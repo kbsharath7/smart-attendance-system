@@ -1,0 +1,18 @@
+HOW TO OPEN THE APP (no commands needed)
+=========================================
+
+EVERY DAY
+  Double-click  Start_Attendance_App.bat
+  - A black window opens. KEEP IT OPEN.
+  - Your browser opens the app by itself in a few seconds.
+  - Log in. (Admin: admin / admin123)
+  - To stop the app, close the black window.
+
+ONLY THE FIRST TIME ON A NEW COMPUTER
+  Double-click  Setup_First_Time.bat
+  - Keep the internet ON. It takes 10 to 25 minutes.
+  - It installs everything and puts an "Attendance App" icon on the Desktop.
+  - Do NOT run it on a computer where the app already works.
+
+If Windows shows "Windows protected your PC", click "More info" and then "Run anyway".
+Camera features (Take attendance, Class monitoring) open a camera window on the same computer.

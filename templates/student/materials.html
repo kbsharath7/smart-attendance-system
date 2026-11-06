@@ -1,0 +1,21 @@
+{% extends "dash.html" %}
+{% block title %}Study material - Student{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Study material</h1><p>Notes, assignments and quizzes your faculty have shared with you.</p></div></div>
+<div class="chips" style="margin-bottom:1.1rem">
+  <a class="chip {{ 'amber' if not kind }}" href="{{ url_for('student_materials') }}">All</a>
+  <a class="chip {{ 'amber' if kind == 'notes' }}" href="{{ url_for('student_materials', kind='notes') }}">Notes</a>
+  <a class="chip {{ 'amber' if kind == 'assignment' }}" href="{{ url_for('student_materials', kind='assignment') }}">Assignments</a>
+  <a class="chip {{ 'amber' if kind == 'quiz' }}" href="{{ url_for('student_materials', kind='quiz') }}">Quizzes</a>
+</div>
+{% if subjects %}
+  {% for subject, items in subjects.items() %}
+  <section class="subject-block">
+    <h2>{{ subject }}</h2>
+    <div class="mat-grid">{% for m in items %}{% include "_material_card.html" %}{% endfor %}</div>
+  </section>
+  {% endfor %}
+{% else %}
+<div class="panel empty"><i class="bi bi-journal-text"></i>Nothing here yet. Notes, assignments and quiz links will appear when your faculty share them.</div>
+{% endif %}
+{% endblock %}

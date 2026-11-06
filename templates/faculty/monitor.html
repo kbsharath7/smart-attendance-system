@@ -1,0 +1,30 @@
+{% extends "dash.html" %}
+{% block title %}Class monitoring - Faculty{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Class monitoring</h1><p>Recognise each student and read their expression while you teach.</p></div></div>
+<div class="grid g2" style="margin-bottom:1.25rem">
+  <div class="panel">
+    <h2>Class details</h2>
+    {% set action = url_for('faculty_monitor_start') %}{% set icon = 'bi-emoji-smile' %}{% set label = 'Start monitoring' %}
+    {% include "_class_form_wrap.html" %}
+  </div>
+  <div class="panel">
+    <h2>How engagement is scored</h2>
+    <p class="muted" style="margin-top:0">An expression is sampled for each recognised student about once a second. Each one counts towards a score from 0 to 100.</p>
+    <div class="legend" style="margin-bottom:1rem">
+      {% for e in EMOTIONS %}<span><i style="background:{{ EMOTION_COLORS[e] }}"></i>{{ e|capitalize }}</span>{% endfor %}
+    </div>
+    <div class="chips"><span class="chip">70% and above: High</span><span class="chip">50 to 69%: Moderate</span><span class="chip">Below 50%: Low</span></div>
+    <div class="notice" style="margin-top:1.2rem">Press <b>q</b> in the camera window when the session ends. The first start takes a moment while the models load.</div>
+  </div>
+</div>
+<div class="panel">
+  <div class="panel-head"><h2>Previous sessions</h2></div>
+  {% if history %}
+  <div class="table-wrap"><table><thead><tr><th>When</th><th>Subject</th><th>Class</th><th>Engagement</th><th></th></tr></thead>
+    <tbody>{% for m in history %}<tr><td class="mono">{{ m.started_at }}</td><td>{{ m.subject }}</td><td>{{ m.department }}-{{ m.semester }}</td>
+      <td><span class="pill {{ 'good' if m.level == 'High' else ('warn' if m.level == 'Moderate' else 'bad') }}">{{ m.level }} &middot; {{ m.overall_engagement }}%</span></td>
+      <td style="text-align:right"><a class="btn btn-outline btn-sm" href="{{ url_for('faculty_monitor_result', mid=m.id) }}">View</a></td></tr>{% endfor %}</tbody></table></div>
+  {% else %}<div class="empty"><i class="bi bi-emoji-neutral"></i>No monitoring sessions yet. Start one above.</div>{% endif %}
+</div>
+{% endblock %}

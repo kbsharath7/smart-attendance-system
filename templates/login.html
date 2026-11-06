@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Sign in - {{ PROJECT_TITLE }}{% endblock %}
+{% block body %}
+<div class="login-wrap">
+  <aside class="login-art">
+    <a class="brand" href="{{ url_for('home') }}"><span class="brand-mark"><i class="bi bi-person-bounding-box"></i></span>Attendance &amp; Engagement</a>
+    <div>
+      <h1>Welcome back to the classroom.</h1>
+      <p>Sign in to take attendance, watch class engagement or manage students and faculty.</p>
+    </div>
+    <a class="muted" style="color:#c6dbd8" href="{{ url_for('home') }}"><i class="bi bi-arrow-left"></i> Back to home</a>
+  </aside>
+  <main class="login-form-side">
+    <div class="login-card">
+      <h2 style="font-size:1.8rem;margin-bottom:0">Sign in</h2>
+      <p class="muted" style="margin-top:.3rem">Choose how you are signing in.</p>
+      {% include "_flashes.html" %}
+      <form method="post" autocomplete="on">
+        <div class="seg" role="radiogroup" aria-label="Account type">
+          <input type="radio" name="role" id="r-fac" value="faculty" {{ 'checked' if role != 'admin' }}><label for="r-fac"><i class="bi bi-person-workspace"></i> Faculty</label>
+          <input type="radio" name="role" id="r-stu" value="student" {{ 'checked' if role == 'student' }}><label for="r-stu"><i class="bi bi-mortarboard"></i> Student</label>
+          <input type="radio" name="role" id="r-adm" value="admin" {{ 'checked' if role == 'admin' }}><label for="r-adm"><i class="bi bi-shield-lock"></i> Admin</label>
+        </div>
+        <div class="field"><label for="username">Username <span class="muted" id="uhint" style="font-weight:400"></span></label><input type="text" id="username" name="username" required autofocus autocomplete="username"></div>
+        <div class="field"><label for="password">Password <span class="muted" id="phint" style="font-weight:400"></span></label><input type="password" id="password" name="password" required autocomplete="current-password"></div>
+        <button class="btn" style="width:100%;justify-content:center" type="submit">Sign in</button>
+      </form>
+    </div>
+  </main>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+const hints = { student: ['(your name)', '(your USN)'], faculty: ['', ''], admin: ['', ''] };
+function sync() { const v = document.querySelector('input[name=role]:checked').value;
+  document.getElementById('uhint').textContent = hints[v][0]; document.getElementById('phint').textContent = hints[v][1]; }
+document.querySelectorAll('input[name=role]').forEach(r => r.addEventListener('change', sync)); sync();
+</script>{% endblock %}

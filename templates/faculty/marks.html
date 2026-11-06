@@ -1,0 +1,62 @@
+{% extends "dash.html" %}
+{% block title %}Marks - Faculty{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Marks</h1><p>Enter Internal 1, Internal 2, assignment, activity and lab marks for your subject.</p></div></div>
+<div class="panel" style="margin-bottom:1.25rem">
+  <form method="get" class="filters" style="margin:0">
+    <div class="field"><label for="subject">Subject</label><select id="subject" name="subject" required>{% for s in subjects %}<option {{ 'selected' if s == subject }}>{{ s }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="department">Department</label><select id="department" name="department">{% for d in departments %}<option value="{{ d.code }}" {{ 'selected' if d.code == (department or fac.department) }}>{{ d.code }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="semester">Semester</label><select id="semester" name="semester">{% for s in semesters %}<option value="{{ s }}" {{ 'selected' if s == semester }}>{{ s }}</option>{% endfor %}</select></div>
+    <button class="btn" type="submit"><i class="bi bi-list-check"></i> Load students</button>
+  </form>
+</div>
+
+{% if roster is none %}
+<div class="panel empty"><i class="bi bi-pencil-square"></i>Choose a subject, department and semester to enter marks.</div>
+{% elif not roster %}
+<div class="panel empty"><i class="bi bi-people"></i>No students are registered in {{ department }}, semester {{ semester }}.</div>
+{% else %}
+<form method="post">
+  <input type="hidden" name="subject" value="{{ subject }}"><input type="hidden" name="department" value="{{ department }}"><input type="hidden" name="semester" value="{{ semester }}">
+  <div class="panel">
+    <div class="panel-head"><h2>{{ subject }} &middot; {{ department }}-{{ semester }}</h2>
+      <span class="muted">Leave a box empty if the mark is not available yet.{% if not has_lab %} This subject has no lab component.{% endif %}</span></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>USN</th><th>Name</th><th>Internal 1 /{{ INTERNAL1_MAX }}</th><th>Internal 2 /{{ INTERNAL2_MAX }}</th><th>Internal avg /{{ INTERNAL1_MAX }}</th><th>Assignment /{{ ASSIGNMENT_MAX }}</th><th>Activity /{{ ACTIVITY_MAX }}</th><th>Lab /{{ LAB_MAX }}</th><th>Final total /{{ INTERNAL1_MAX + INTERNAL2_MAX + ASSIGNMENT_MAX + ACTIVITY_MAX + (LAB_MAX if has_lab else 0) }}</th></tr></thead>
+      <tbody>{% for s in roster %}{% set m = existing.get(s.usn) %}
+        <tr><td><b>{{ s.usn }}</b></td><td>{{ s.name }}</td>
+        <td><input class="markin mono" type="number" step="0.5" min="0" max="{{ INTERNAL1_MAX }}" name="internal1_{{ s.usn }}" value="{{ m.internal1 if m and m.internal1 is not none else '' }}" aria-label="Internal 1 marks for {{ s.usn }}"></td>
+        <td><input class="markin mono" type="number" step="0.5" min="0" max="{{ INTERNAL2_MAX }}" name="internal2_{{ s.usn }}" value="{{ m.internal2 if m and m.internal2 is not none else '' }}" aria-label="Internal 2 marks for {{ s.usn }}"></td>
+        <td class="mono"><b class="int-avg">-</b></td>
+        <td><input class="markin mono" type="number" step="0.5" min="0" max="{{ ASSIGNMENT_MAX }}" name="assignment_{{ s.usn }}" value="{{ m.assignment if m and m.assignment is not none else '' }}" aria-label="Assignment marks for {{ s.usn }}"></td>
+        <td><input class="markin mono" type="number" step="0.5" min="0" max="{{ ACTIVITY_MAX }}" name="activity_{{ s.usn }}" value="{{ m.activity if m and m.activity is not none else '' }}" aria-label="Activity marks for {{ s.usn }}"></td>
+        <td><input class="markin mono" type="number" step="0.5" min="0" max="{{ LAB_MAX }}" name="lab_{{ s.usn }}" value="{{ m.lab if m and m.lab is not none else '' }}" {{ '' if has_lab else 'disabled' }} aria-label="Lab marks for {{ s.usn }}"></td>
+        <td class="mono"><b class="final-total">-</b></td></tr>
+      {% endfor %}</tbody>
+    </table></div>
+    <div style="margin-top:1.2rem"><button class="btn" type="submit"><i class="bi bi-check2-circle"></i> Save marks</button></div>
+  </div>
+</form>
+{% endif %}
+<script>
+(function () {
+  function recalc(row) {
+    var sum = 0, any = false;
+    row.querySelectorAll('input.markin').forEach(function (i) {
+      if (i.disabled || i.value === '') return;
+      var v = parseFloat(i.value); if (!isNaN(v)) { sum += v; any = true; }
+    });
+    row.querySelector('.final-total').textContent = any ? (Math.round(sum * 10) / 10) : '-';
+    var a = row.querySelector('input[name^=internal1_]'), b = row.querySelector('input[name^=internal2_]');
+    var avg = row.querySelector('.int-avg');
+    if (avg) avg.textContent = (a && b && a.value !== '' && b.value !== '' && !isNaN(parseFloat(a.value)) && !isNaN(parseFloat(b.value)))
+      ? (Math.round((parseFloat(a.value) + parseFloat(b.value)) / 2 * 100) / 100) : '-';
+  }
+  document.querySelectorAll('table tbody tr').forEach(function (row) {
+    if (!row.querySelector('.final-total')) return;
+    recalc(row);
+    row.addEventListener('input', function () { recalc(row); });
+  });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block body %}
+<header class="hero">
+  <div class="slides">
+    {% for s in slides %}
+    <div class="slide fx-{{ s.fx }}" style="background:{{ s.fallback }}" data-title="{{ s.title }}" data-text="{{ s.text }}">
+      <div class="slide-img" style="background-image:url('{{ s.url }}')"></div>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="hero-shade"></div>
+
+  <nav class="site-nav">
+    <a class="brand" href="{{ url_for('home') }}"><span class="brand-mark"><i class="bi bi-person-bounding-box"></i></span>Attendance &amp; Engagement</a>
+    <div class="nav-links">
+      <a class="link" href="#how">How it works</a>
+      <a class="link" href="#departments">Departments</a>
+      <a class="link" href="#faculty">Faculty</a>
+      {% if session.role == 'admin' %}<a class="btn btn-amber" href="{{ url_for('admin_dashboard') }}">Open dashboard</a>
+      {% elif session.role == 'faculty' %}<a class="btn btn-amber" href="{{ url_for('faculty_dashboard') }}">Open dashboard</a>
+      {% elif session.role == 'student' %}<a class="btn btn-amber" href="{{ url_for('student_dashboard') }}">Open dashboard</a>
+      {% else %}<a class="btn btn-amber" href="{{ url_for('login') }}">Sign in</a>{% endif %}
+    </div>
+  </nav>
+
+  <div class="hero-copy">
+    <h1>Attendance that marks itself. A class you can read at a glance.</h1>
+    <p>{{ PROJECT_TITLE }}: face recognition records who is in the room, and emotion detection shows who is following the lecture.</p>
+    <div class="hero-actions">
+      <a class="btn btn-amber" href="{{ url_for('login', role='faculty') }}"><i class="bi bi-person-workspace"></i> Faculty sign in</a>
+      <a class="btn btn-ghost" href="{{ url_for('login', role='student') }}"><i class="bi bi-mortarboard"></i> Student sign in</a>
+      <a class="btn btn-ghost" href="{{ url_for('login', role='admin') }}"><i class="bi bi-shield-lock"></i> Admin sign in</a>
+    </div>
+  </div>
+  <div class="hero-foot">
+    <div class="caption" id="caption" aria-live="polite"></div>
+    <div class="dots" id="dots"></div>
+  </div>
+</header>
+
+<section class="band" aria-label="At a glance">
+  <div class="band-inner">
+    <div class="band-stat"><b class="mono">{{ stats.students }}</b><span>Students registered</span></div>
+    <div class="band-stat"><b class="mono">{{ stats.departments }}</b><span>Departments</span></div>
+    <div class="band-stat"><b class="mono">{{ stats.faculty }}</b><span>Faculty members</span></div>
+  </div>
+</section>
+
+<section class="section" id="how">
+  <h2>From camera to class report in four steps</h2>
+  <p class="section-lead">Everything runs on the classroom computer. Students are enrolled once, then recognised automatically.</p>
+  <div class="steps">
+    <div class="step"><span class="n">1</span><i class="bi bi-person-plus"></i><h3>Enrol</h3><p>The admin adds a student and captures a few face samples.</p></div>
+    <div class="step"><span class="n">2</span><i class="bi bi-camera-video"></i><h3>Take attendance</h3><p>Faculty pick the subject, department and semester, then the camera recognises the class.</p></div>
+    <div class="step"><span class="n">3</span><i class="bi bi-emoji-smile"></i><h3>Monitor the class</h3><p>Expressions are read during the lecture and turned into an engagement score.</p></div>
+    <div class="step"><span class="n">4</span><i class="bi bi-graph-up-arrow"></i><h3>Review</h3><p>Attendance percentages and emotion charts show who needs attention.</p></div>
+  </div>
+</section>
+
+<section class="section" id="departments" style="padding-top:0">
+  <h2>Departments</h2>
+  <p class="section-lead">Students registered in each department.</p>
+  <div class="dept-row">
+    {% for d in dept_counts %}
+    <div class="dept"><div><b>{{ d.code }}</b><small>{{ d.name }}</small></div><span class="count mono">{{ d.n }}</span></div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="section" id="faculty" style="padding-top:0">
+  <h2>Faculty</h2>
+  <p class="section-lead">Who teaches what.</p>
+  {% if faculty %}
+  <div class="roster">
+    <div class="roster-row head"><span>Name</span><span>Department</span><span>Subjects</span></div>
+    {% for f in faculty %}
+    <div class="roster-row">
+      <span><b>{{ f.full_name or f.username }}</b>{% if f.full_name %}<br><small class="muted">{{ f.username }}</small>{% endif %}</span>
+      <span><span class="chip amber">{{ f.department }}</span></span>
+      <span class="chips">{% for s in f.subject_list %}<span class="chip">{{ s }}</span>{% endfor %}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="panel empty"><i class="bi bi-people"></i>No faculty yet. The admin can add faculty accounts after signing in.</div>
+  {% endif %}
+</section>
+
+<footer class="footer">{{ PROJECT_TITLE }}</footer>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/slideshow.js') }}"></script>{% endblock %}

@@ -1,0 +1,7 @@
+{% extends "dash.html" %}
+{% block title %}Events - Student{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Events</h1><p>Announcements published by your faculty.</p></div></div>
+{% if events %}<div class="events">{% for e in events %}{% include "_event_card.html" %}{% endfor %}</div>
+{% else %}<div class="panel empty"><i class="bi bi-megaphone"></i>No events yet. They will appear here when a faculty member posts one.</div>{% endif %}
+{% endblock %}

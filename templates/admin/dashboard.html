@@ -1,0 +1,42 @@
+{% extends "dash.html" %}
+{% from "_macros.html" import pct_cell with context %}
+{% block title %}Overview - Admin{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Overview</h1><p>What is registered and where attendance needs attention.</p></div>
+  <a class="btn btn-amber" href="{{ url_for('admin_students') }}"><i class="bi bi-person-plus"></i> Add student</a></div>
+
+<div class="tiles">
+  <div class="tile"><b class="mono">{{ stats.students }}</b><span>Students registered</span></div>
+  <div class="tile amber"><b class="mono">{{ stats.faculty }}</b><span>Faculty accounts</span></div>
+  <div class="tile mint"><b class="mono">{{ sessions }}</b><span>Classes recorded</span></div>
+  <div class="tile coral"><b class="mono">{{ monitors }}</b><span>Monitoring sessions</span></div>
+</div>
+
+<div class="grid g2">
+  <div class="panel">
+    <div class="panel-head"><h2>Students by department</h2></div>
+    {% if by_dept %}<div class="chart-box"><canvas id="deptChart"></canvas></div>
+    {% else %}<div class="empty"><i class="bi bi-people"></i>No students yet. Add the first one to see this chart.</div>{% endif %}
+  </div>
+  <div class="panel">
+    <div class="panel-head"><h2>Below {{ THRESHOLD }}% attendance</h2><a class="btn btn-outline btn-sm" href="{{ url_for('admin_attendance') }}">All students</a></div>
+    {% if low %}
+    <div class="table-wrap"><table>
+      <thead><tr><th>USN</th><th>Name</th><th>Attendance</th></tr></thead>
+      <tbody>{% for r in low %}<tr><td><a href="{{ url_for('admin_student_detail', usn=r.usn) }}">{{ r.usn }}</a></td><td>{{ r.name }}</td><td>{{ pct_cell(r.percent) }}</td></tr>{% endfor %}</tbody>
+    </table></div>
+    {% else %}<div class="empty"><i class="bi bi-check2-circle"></i>No student is below the threshold.</div>{% endif %}
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+const d = {{ by_dept|tojson }};
+if (d.length) new Chart(document.getElementById('deptChart'), {
+  type: 'bar',
+  data: { labels: d.map(x => x.department), datasets: [{ data: d.map(x => x.n), backgroundColor: '#2A5F6E', borderRadius: 6 }] },
+  options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+});
+</script>
+{% endblock %}

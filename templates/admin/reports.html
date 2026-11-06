@@ -1,0 +1,28 @@
+{% extends "dash.html" %}
+{% block title %}Reports - Admin{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Excel reports</h1><p>Generate a workbook whenever you need one.</p></div></div>
+<div class="grid g2">
+  <div class="panel">
+    <h2>Class or department report</h2>
+    <p class="muted" style="margin-top:0">Attendance per subject and overall (shortfalls in red) plus all marks.</p>
+    <form method="get" action="{{ url_for('admin_report_class') }}">
+      <div class="row2">
+        <div class="field"><label for="department">Department</label><select id="department" name="department"><option value="">All</option>{% for d in departments %}<option value="{{ d.code }}">{{ d.code }}</option>{% endfor %}</select></div>
+        <div class="field"><label for="semester">Semester</label><select id="semester" name="semester"><option value="">All</option>{% for s in semesters %}<option>{{ s }}</option>{% endfor %}</select></div>
+      </div>
+      <button class="btn" type="submit"><i class="bi bi-download"></i> Download .xlsx</button>
+    </form>
+  </div>
+  <div class="panel">
+    <h2>Student report</h2>
+    <p class="muted" style="margin-top:0">Profile, attendance by subject, class log, marks and leave history.</p>
+    {% if students %}
+    <form onsubmit="location.href='{{ url_for('admin_reports') }}/student/' + this.usn.value + '.xlsx'; return false;">
+      <div class="field"><label for="usn">Student</label><select id="usn" name="usn">{% for s in students %}<option value="{{ s.usn }}">{{ s.usn }} - {{ s.name }} ({{ s.department }}-{{ s.semester }})</option>{% endfor %}</select></div>
+      <button class="btn" type="submit"><i class="bi bi-download"></i> Download .xlsx</button>
+    </form>
+    {% else %}<div class="empty"><i class="bi bi-person"></i>No students registered yet.</div>{% endif %}
+  </div>
+</div>
+{% endblock %}

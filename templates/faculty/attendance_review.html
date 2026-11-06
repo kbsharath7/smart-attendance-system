@@ -1,0 +1,40 @@
+{% extends "dash.html" %}
+{% block title %}Review attendance - Faculty{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Review attendance</h1><p>{{ data.subject }} &middot; {{ data.department }} &middot; Semester {{ data.semester }}</p></div></div>
+{% set rec = data.present %}
+<form method="post" action="{{ url_for('faculty_attendance_save', token=token) }}">
+  <div class="panel">
+    <div class="panel-head">
+      <div><h2>{{ roster|length }} students</h2><span class="muted"><b id="count">0</b> marked present. The camera recognised {{ rec|length }}.</span></div>
+      <div style="display:flex;gap:.6rem;align-items:end;flex-wrap:wrap">
+        <div class="field" style="margin:0"><label for="class_date">Class date</label><input type="date" id="class_date" name="class_date" value="{{ today }}" max="{{ today }}"></div>
+        <button type="button" class="btn btn-outline btn-sm" id="all">Select all</button>
+        <button type="button" class="btn btn-outline btn-sm" id="none">Clear</button>
+      </div>
+    </div>
+    <div class="checklist">
+      {% for s in roster %}
+      <label class="check" data-usn="{{ s.usn }}"><input type="checkbox" name="present" value="{{ s.usn }}" {{ 'checked' if s.usn in rec }}><span><b>{{ s.usn }}</b><span class="leave-flag">approved leave</span><small>{{ s.name }}</small></span></label>
+      {% endfor %}
+    </div>
+    <div style="margin-top:1.4rem;display:flex;gap:.7rem;flex-wrap:wrap">
+      <button class="btn" type="submit"><i class="bi bi-check2-circle"></i> Save attendance</button>
+      <a class="btn btn-outline" href="{{ url_for('faculty_attendance') }}">Discard and retake</a>
+    </div>
+  </div>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>
+const leaves = {{ leave_map|tojson }}, dateInput = document.getElementById('class_date');
+function markLeaves() { document.querySelectorAll('.check[data-usn]').forEach(el => {
+  const r = leaves[el.dataset.usn] || []; el.classList.toggle('on-leave', r.some(x => dateInput.value >= x[0] && dateInput.value <= x[1])); }); }
+dateInput.addEventListener('change', markLeaves); markLeaves();
+const boxes = [...document.querySelectorAll('input[name=present]')], count = document.getElementById('count');
+const upd = () => count.textContent = boxes.filter(b => b.checked).length;
+boxes.forEach(b => b.addEventListener('change', upd)); upd();
+document.getElementById('all').onclick = () => { boxes.forEach(b => b.checked = true); upd(); };
+document.getElementById('none').onclick = () => { boxes.forEach(b => b.checked = false); upd(); };
+</script>
+{% endblock %}

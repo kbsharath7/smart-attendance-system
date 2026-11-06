@@ -1,0 +1,49 @@
+{% extends "dash.html" %}
+{% block title %}Confirm manual changes - {{ PROJECT_TITLE }}{% endblock %}
+{% block content %}
+<h1>Confirm manual changes</h1>
+<p class="muted">You changed attendance for the students below compared with what the camera recorded. Choose a reason for each one. It is saved in the override log, so the change can be checked later.</p>
+
+{% if error %}
+<div class="flash error" role="alert">Choose a reason for every student, and write a note when you pick "Other".</div>
+{% endif %}
+
+<form method="post" action="{{ url_for('faculty_attendance_save', token=token) }}">
+  <input type="hidden" name="class_date" value="{{ class_date }}">
+  <input type="hidden" name="confirm_overrides" value="1">
+  {% for u in present %}<input type="hidden" name="present" value="{{ u }}">{% endfor %}
+
+  <div class="panel" style="max-width:900px;overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse">
+      <thead>
+        <tr style="text-align:left;border-bottom:1px solid #d6dedc">
+          <th style="padding:.5rem">Student</th><th style="padding:.5rem">Change</th>
+          <th style="padding:.5rem">Reason</th><th style="padding:.5rem">Note</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for r in rows %}
+        <tr style="border-bottom:1px solid #eef2f1">
+          <td style="padding:.6rem .5rem"><b>{{ r.name }}</b><br><small class="muted">{{ r.usn }}</small></td>
+          <td style="padding:.6rem .5rem">
+            {% if r.action == 'Present' %}<span class="pill good">Marked present</span>{% else %}<span class="pill bad">Marked absent</span>{% endif %}
+          </td>
+          <td style="padding:.6rem .5rem">
+            <select name="reason_{{ r.usn }}" class="reason-{{ r.action }}" required>
+              <option value="">Choose a reason</option>
+              {% for o in r.options %}<option value="{{ o }}" {{ 'selected' if o == r.reason }}>{{ o }}</option>{% endfor %}
+            </select>
+          </td>
+          <td style="padding:.6rem .5rem"><input type="text" name="note_{{ r.usn }}" value="{{ r.note }}" maxlength="120" placeholder="Optional note"></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div style="display:flex;gap:.7rem;margin-top:1rem;flex-wrap:wrap">
+    <button class="btn btn-amber" type="submit"><i class="bi bi-check2-circle"></i> Save attendance</button>
+    <a class="btn btn-outline" href="{{ url_for('faculty_attendance_review', token=token) }}"><i class="bi bi-arrow-left"></i> Back to review</a>
+  </div>
+</form>
+{% endblock %}

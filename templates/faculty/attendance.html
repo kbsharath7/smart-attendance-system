@@ -1,0 +1,22 @@
+{% extends "dash.html" %}
+{% block title %}Take attendance - Faculty{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Take attendance</h1><p>Choose the class, then the camera recognises students as they face it.</p></div></div>
+<div class="grid g2">
+  <div class="panel">
+    <h2>Class details</h2>
+    {% set action = url_for('faculty_attendance_start') %}{% set icon = 'bi-camera-video' %}{% set label = 'Start camera' %}
+    {% include "_class_form_wrap.html" %}
+  </div>
+  <div class="panel">
+    <h2>What happens next</h2>
+    <ol style="padding-left:1.2rem;margin:0;display:grid;gap:.7rem">
+      <li>A camera window opens on this computer.</li>
+      <li>Each student is marked present once they are recognised in a few frames.</li>
+      <li>Press <b>q</b> in the camera window to finish.</li>
+      <li>You review the list, fix anything the camera missed, and save.</li>
+    </ol>
+    <div class="notice" style="margin-top:1.2rem">Only students registered in the chosen department and semester are counted.</div>
+  </div>
+</div>
+{% endblock %}

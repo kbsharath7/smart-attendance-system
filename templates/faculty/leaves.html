@@ -1,0 +1,27 @@
+{% extends "dash.html" %}
+{% block title %}Leave requests - Faculty{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Leave requests</h1><p>Requests from students in your department and classes. Your decision shows on the student's page.</p></div></div>
+<div class="panel" style="margin-bottom:1.25rem">
+  <div class="panel-head"><h2>Waiting for a decision ({{ pending|length }})</h2></div>
+  {% for l in pending %}
+  <div class="leave-card pending">
+    <div class="leave-top"><span><b>{{ l.name }}</b> <span class="muted">{{ l.usn }} &middot; {{ l.department }}-{{ l.semester }}</span></span>
+      <b class="mono">{{ l.from_date }}{% if l.to_date != l.from_date %} to {{ l.to_date }}{% endif %}</b></div>
+    <div>{{ l.reason }}</div>
+    <form method="post" action="{{ url_for('faculty_decide_leave', lid=l.id) }}" class="leave-actions">
+      <input type="text" name="comment" placeholder="Comment for the student (optional)" aria-label="Comment for {{ l.name }}">
+      <button class="btn btn-green btn-sm" name="decision" value="approve"><i class="bi bi-check-lg"></i> Approve</button>
+      <button class="btn btn-red btn-sm" name="decision" value="reject"><i class="bi bi-x-lg"></i> Reject</button>
+    </form>
+  </div>
+  {% else %}<div class="empty"><i class="bi bi-check2-all"></i>No requests are waiting.</div>{% endfor %}
+</div>
+<div class="panel">
+  <div class="panel-head"><h2>Decided</h2></div>
+  {% if decided %}<div class="table-wrap"><table><thead><tr><th>Student</th><th>Dates</th><th>Reason</th><th>Decision</th><th>Comment</th></tr></thead>
+    <tbody>{% for l in decided %}<tr><td><b>{{ l.name }}</b><br><small class="muted">{{ l.usn }}</small></td><td class="mono">{{ l.from_date }}{% if l.to_date != l.from_date %} to {{ l.to_date }}{% endif %}</td><td>{{ l.reason }}</td>
+      <td><span class="pill {{ 'good' if l.status == 'Approved' else 'bad' }}">{{ l.status }}</span></td><td>{{ l.faculty_comment or '-' }}</td></tr>{% endfor %}</tbody></table></div>
+  {% else %}<div class="empty"><i class="bi bi-calendar-check"></i>Nothing decided yet.</div>{% endif %}
+</div>
+{% endblock %}

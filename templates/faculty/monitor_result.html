@@ -1,0 +1,69 @@
+{% extends "dash.html" %}
+{% block title %}Monitoring result - Faculty{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Class engagement</h1><p>{{ m.subject }} &middot; {{ m.department }} &middot; Semester {{ m.semester }} &middot; {{ m.started_at }}</p></div>
+  <div style="display:flex;gap:.6rem;flex-wrap:wrap"><a class="btn btn-outline" href="{{ url_for('faculty_monitor_export', mid=m.id) }}"><i class="bi bi-file-earmark-spreadsheet"></i> Excel report</a>
+  <a class="btn btn-outline" href="{{ url_for('faculty_monitor') }}"><i class="bi bi-arrow-left"></i> Back</a></div></div>
+
+<div class="grid g3" style="margin-bottom:1.25rem">
+  <div class="panel" style="border-top:4px solid {{ '#2E9E7A' if m.level == 'High' else ('#F2A900' if m.level == 'Moderate' else '#D8503F') }}">
+    <span class="muted">Overall class performance</span>
+    <div class="score mono" style="margin:.4rem 0">{{ m.overall_engagement }}%</div>
+    <span class="pill {{ 'good' if m.level == 'High' else ('warn' if m.level == 'Moderate' else 'bad') }}">{{ m.level }} engagement</span>
+    <p class="muted" style="margin:.9rem 0 0;font-size:.88rem">Average of {{ seen|length }} student scores{% if missing %}; {{ missing }} not seen by the camera{% endif %}.</p>
+  </div>
+  <div class="panel"><h3>Class emotions</h3><div class="chart-box sm"><canvas id="classPie"></canvas></div></div>
+  <div class="panel"><h3>Students by engagement level</h3><div class="chart-box sm"><canvas id="levelPie"></canvas></div></div>
+</div>
+
+<div class="panel" style="margin-bottom:1.25rem">
+  <div class="panel-head"><h2>Student level emotions</h2>
+    <div class="legend">{% for e in EMOTIONS %}<span><i style="background:{{ EMOTION_COLORS[e] }}"></i>{{ e|capitalize }}</span>{% endfor %}</div></div>
+  <div class="mini-grid">
+    {% for s in seen %}
+    <div class="mini">
+      <h4>{{ s.name }}</h4><small>{{ s.usn }}</small>
+      <div class="cv"><canvas id="pie-{{ loop.index0 }}"></canvas></div>
+      <span class="pill {{ 'good' if s.level == 'High' else ('warn' if s.level == 'Moderate' else 'bad') }}">{{ s.level }} &middot; {{ s.score }}%</span>
+      <small style="display:block;margin-top:.3rem">Mostly {{ s.dominant }} ({{ s.samples }} samples)</small>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-head"><h2>All students</h2></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>USN</th><th>Name</th><th>Main emotion</th><th>Samples</th><th>Engagement</th><th>Level</th></tr></thead>
+    <tbody>{% for s in students %}
+      <tr><td><b>{{ s.usn }}</b></td><td>{{ s.name }}</td>
+      {% if s.counts %}
+        <td><span class="chip" style="background:{{ EMOTION_COLORS[s.dominant] }}22">{{ s.dominant|capitalize }}</span></td><td class="mono">{{ s.samples }}</td>
+        <td><div style="display:flex;align-items:center;gap:.6rem"><div class="bar" style="width:90px"><i class="{{ '' if s.level == 'High' else ('warn' if s.level == 'Moderate' else 'bad') }}" style="width:{{ s.score }}%"></i></div><b class="mono">{{ s.score }}%</b></div></td>
+        <td><span class="pill {{ 'good' if s.level == 'High' else ('warn' if s.level == 'Moderate' else 'bad') }}">{{ s.level }}</span></td>
+      {% else %}<td colspan="4"><span class="pill na">Not seen by the camera</span></td>{% endif %}</tr>
+    {% endfor %}</tbody></table></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+const EM = {{ EMOTIONS|tojson }}, COL = {{ EMOTION_COLORS|tojson }};
+const seen = {{ seen|tojson }}, classCounts = {{ class_counts|tojson }}, levels = {{ levels|tojson }};
+const pieOpts = (legend) => ({ maintainAspectRatio: false, plugins: { legend: { display: legend, position: 'bottom', labels: { boxWidth: 10 } } } });
+
+new Chart(document.getElementById('classPie'), { type: 'pie',
+  data: { labels: EM.map(e => e[0].toUpperCase() + e.slice(1)), datasets: [{ data: EM.map(e => classCounts[e]), backgroundColor: EM.map(e => COL[e]), borderWidth: 2 }] },
+  options: pieOpts(true) });
+new Chart(document.getElementById('levelPie'), { type: 'doughnut',
+  data: { labels: Object.keys(levels), datasets: [{ data: Object.values(levels), backgroundColor: ['#2E9E7A', '#F2A900', '#D8503F'], borderWidth: 2 }] },
+  options: Object.assign(pieOpts(true), { cutout: '55%' }) });
+
+seen.forEach((s, i) => {
+  const used = EM.filter(e => s.counts[e] > 0);
+  new Chart(document.getElementById('pie-' + i), { type: 'pie',
+    data: { labels: used.map(e => e[0].toUpperCase() + e.slice(1)), datasets: [{ data: used.map(e => s.counts[e]), backgroundColor: used.map(e => COL[e]), borderWidth: 1 }] },
+    options: pieOpts(false) });
+});
+</script>
+{% endblock %}

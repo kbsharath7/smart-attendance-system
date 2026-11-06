@@ -1,0 +1,54 @@
+{% extends "dash.html" %}
+{% block title %}Leave - Student{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Leave requests</h1><p>The faculty member you choose will approve or reject the request. The result shows here.</p></div></div>
+<div class="grid g-side">
+  <div class="panel" style="align-self:start">
+    <h2>Request leave</h2>
+    <form method="post">
+      <div class="field"><label>Send to <span class="muted" style="font-weight:400">(choose one, several or all)</span></label>
+        <label style="display:flex;gap:.5rem;align-items:center;font-weight:600;margin:.3rem 0"><input type="checkbox" id="all_fac"> Select all faculty</label>
+        <div id="fac_list" style="max-height:220px;overflow:auto;border:1px solid var(--line,#ddd);border-radius:8px;padding:.5rem .7rem">
+          {% for f in faculty_list %}
+          <label style="display:flex;gap:.5rem;align-items:flex-start;margin:.35rem 0;font-weight:400">
+            <input type="checkbox" name="faculty_ids" value="{{ f.id }}" style="margin-top:.25rem">
+            <span><b>{{ f.full_name or f.username }}</b> <span class="muted">&middot; {{ f.department }}{% if f.subjects %} &middot; {{ f.subjects }}{% endif %}</span></span>
+          </label>
+          {% else %}<div class="muted">No faculty accounts exist yet.</div>{% endfor %}
+        </div></div>
+      <div class="row2">
+        <div class="field"><label for="from_date">From</label><input type="date" id="from_date" name="from_date" required value="{{ today }}"></div>
+        <div class="field"><label for="to_date">To</label><input type="date" id="to_date" name="to_date" required value="{{ today }}"></div>
+      </div>
+      <div class="field"><label for="reason">Reason</label><textarea id="reason" name="reason" required placeholder="Briefly explain why you need leave"></textarea></div>
+      <button class="btn" type="submit" style="width:100%;justify-content:center"><i class="bi bi-send"></i> Send request</button>
+    </form>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><h2>My requests</h2></div>
+    {% for l in leaves %}
+    <div class="leave-card {{ 'pending' if l.status == 'Pending' }}">
+      <div class="leave-top"><b class="mono">{{ l.from_date }}{% if l.to_date != l.from_date %} to {{ l.to_date }}{% endif %}</b>
+        <span class="pill {{ 'good' if l.status == 'Approved' else ('bad' if l.status == 'Rejected' else 'warn') }}">{{ l.status }}</span></div>
+      {% if l.to_name or l.to_username %}<div class="muted" style="font-size:.88rem">To: {{ l.to_name or l.to_username }}</div>{% endif %}
+      <div>{{ l.reason }}</div>
+      {% if l.status != 'Pending' %}<div class="muted" style="font-size:.88rem">{{ l.status }} by {{ l.full_name or l.username or 'faculty' }}{% if l.faculty_comment %}: {{ l.faculty_comment }}{% endif %}</div>
+      {% else %}<div class="muted" style="font-size:.88rem">Waiting for a decision.</div>{% endif %}
+    </div>
+    {% else %}<div class="empty"><i class="bi bi-calendar-check"></i>You have not requested any leave.</div>{% endfor %}
+  </div>
+</div>
+<script>
+(function () {
+  var all = document.getElementById('all_fac');
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('#fac_list input[name=faculty_ids]'));
+  if (!all) return;
+  all.addEventListener('change', function () { boxes.forEach(function (b) { b.checked = all.checked; }); });
+  boxes.forEach(function (b) { b.addEventListener('change', function () {
+    all.checked = boxes.length > 0 && boxes.every(function (x) { return x.checked; }); }); });
+  all.form.addEventListener('submit', function (e) {
+    if (!boxes.some(function (b) { return b.checked; })) { e.preventDefault(); alert('Choose at least one faculty member.'); }
+  });
+})();
+</script>
+{% endblock %}

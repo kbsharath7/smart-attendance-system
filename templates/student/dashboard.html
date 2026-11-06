@@ -1,0 +1,33 @@
+{% extends "dash.html" %}
+{% from "_macros.html" import pct_cell, pct_pill with context %}
+{% block title %}My progress - Student{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Hello, {{ st.name }}</h1><p>{{ st.usn }} &middot; {{ st.department }} &middot; Semester {{ st.semester }}</p></div>
+  <a class="btn btn-outline" href="{{ url_for('student_report') }}"><i class="bi bi-file-earmark-spreadsheet"></i> Download my report</a></div>
+
+<div class="tiles">
+  <div class="tile mint"><b class="mono">{{ (overall ~ '%') if overall is not none else '-' }}</b><span>Overall attendance</span></div>
+  <div class="tile"><b class="mono">{{ present }} / {{ total }}</b><span>Classes attended</span></div>
+  <div class="tile amber"><b class="mono">{{ marks|length }}</b><span>Subjects with marks</span></div>
+  {% if latest_leave %}<div class="tile {{ 'mint' if latest_leave.status == 'Approved' else ('coral' if latest_leave.status == 'Rejected' else 'amber') }}"><b>{{ latest_leave.status }}</b><span>Latest leave ({{ latest_leave.from_date }})</span></div>{% endif %}
+</div>
+{% if overall is not none and overall < THRESHOLD %}<div class="notice" style="border-color:var(--coral);background:#fdeceb">Your attendance is below {{ THRESHOLD }}%. Speak to your faculty if you need to catch up.</div>{% endif %}
+
+<div class="grid g2" style="margin-bottom:1.25rem">
+  <div class="panel"><div class="panel-head"><h2>Attendance by subject</h2></div>
+    {% if subj %}<div class="table-wrap"><table><thead><tr><th>Subject</th><th>Present / Total</th><th>Attendance</th><th>Status</th></tr></thead>
+      <tbody>{% for s in subj %}<tr><td><b>{{ s.subject }}</b></td><td class="mono">{{ s.present }} / {{ s.total }}</td><td>{{ pct_cell(s.percent) }}</td><td>{{ pct_pill(s.percent) }}</td></tr>{% endfor %}</tbody></table></div>
+    {% else %}<div class="empty"><i class="bi bi-calendar-x"></i>No classes recorded yet.</div>{% endif %}</div>
+  <div class="panel"><div class="panel-head"><h2>Marks</h2></div>
+    {% if marks %}<div class="table-wrap"><table><thead><tr><th>Subject</th><th>Internal 1 /{{ INTERNAL1_MAX }}</th><th>Internal 2 /{{ INTERNAL2_MAX }}</th><th>Assignment /{{ ASSIGNMENT_MAX }}</th><th>Activity /{{ ACTIVITY_MAX }}</th><th>Lab /{{ LAB_MAX }}</th><th>Total</th></tr></thead>
+      <tbody>{% for m in marks %}<tr><td><b>{{ m.subject }}</b></td><td class="mono">{{ m.internal1 if m.internal1 is not none else '-' }}</td><td class="mono">{{ m.internal2 if m.internal2 is not none else '-' }}</td><td class="mono">{{ m.assignment if m.assignment is not none else '-' }}</td><td class="mono">{{ m.activity if m.activity is not none else '-' }}</td><td class="mono">{{ m.lab if m.lab is not none else '-' }}</td>
+        <td class="mono"><b>{{ m.total if m.total is not none else '-' }}</b>{% if m.total is not none %} <span class="muted">/ {{ m.out_of }}</span>{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+    {% else %}<div class="empty"><i class="bi bi-pencil-square"></i>Your faculty have not entered marks yet.</div>{% endif %}</div>
+</div>
+
+<div class="panel">
+  <div class="panel-head"><h2>Latest events</h2><a class="btn btn-outline btn-sm" href="{{ url_for('student_events') }}">See all</a></div>
+  {% if events %}<div class="events">{% for e in events %}{% include "_event_card.html" %}{% endfor %}</div>
+  {% else %}<div class="empty"><i class="bi bi-megaphone"></i>No events have been published yet.</div>{% endif %}
+</div>
+{% endblock %}

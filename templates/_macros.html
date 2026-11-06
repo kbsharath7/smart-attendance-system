@@ -1,0 +1,15 @@
+{% macro pct_cell(p) %}
+  {% if p is none %}<span class="pill na">No classes yet</span>
+  {% else %}
+  <div style="display:flex;align-items:center;gap:.6rem">
+    <div class="bar" style="width:90px"><i class="{{ '' if p >= THRESHOLD else ('warn' if p >= 60 else 'bad') }}" style="width:{{ p }}%"></i></div>
+    <b class="mono">{{ p }}%</b>
+  </div>
+  {% endif %}
+{% endmacro %}
+{% macro pct_pill(p) %}
+  {% if p is none %}<span class="pill na">-</span>
+  {% elif p >= THRESHOLD %}<span class="pill good">Eligible</span>
+  {% elif p >= 60 %}<span class="pill warn">At risk</span>
+  {% else %}<span class="pill bad">Shortage</span>{% endif %}
+{% endmacro %}

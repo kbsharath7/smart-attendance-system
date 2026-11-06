@@ -1,0 +1,11 @@
+<form method="post" action="{{ action }}">
+  <div class="field"><label for="subject">Subject</label>
+    <select id="subject" name="subject" required>{% for s in subjects %}<option value="{{ s }}">{{ s }}</option>{% endfor %}</select></div>
+  <div class="row2">
+    <div class="field"><label for="department">Department</label>
+      <select id="department" name="department" required>{% for d in departments %}<option value="{{ d.code }}" {{ 'selected' if d.code == fac.department }}>{{ d.code }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="semester">Semester</label>
+      <select id="semester" name="semester" required>{% for s in semesters %}<option value="{{ s }}">{{ s }}</option>{% endfor %}</select></div>
+  </div>
+  <button class="btn btn-amber" type="submit" style="width:100%;justify-content:center" onclick="var f=this.form; if(f.checkValidity()){ setTimeout(()=>{this.disabled=true;this.innerHTML='Camera is open on this computer...'},0) }"><i class="bi {{ icon }}"></i> {{ label }}</button>
+</form>

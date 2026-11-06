@@ -1,0 +1,14 @@
+venv/
+__pycache__/
+*.pyc
+*.db
+*.lnk
+.env
+20170512-110547/
+tmp/
+materials/
+static/uploads/
+20170512-110547/
+tmp/
+materials/
+static/uploads/

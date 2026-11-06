@@ -1,0 +1,114 @@
+{% extends "dash.html" %}
+{% block title %}Study material - Faculty{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Study material</h1><p>Share notes and assignment PDFs, or a Google Forms quiz link. Upload once and choose who gets it: one class, a whole department, every student, or students you pick. Only the chosen registered students can see and download it.</p></div></div>
+{% if not subjects %}
+<div class="panel empty"><i class="bi bi-journal-text"></i>No subjects are assigned to your account yet. Ask the admin to add your subjects.</div>
+{% else %}
+<div class="grid g-side">
+  <div class="panel" style="align-self:start">
+    <h2>Share something new</h2>
+    <form method="post" enctype="multipart/form-data" id="mform">
+      <div class="field"><label for="kind">What are you sharing?</label>
+        <select id="kind" name="kind">
+          <option value="notes">Notes (PDF)</option>
+          <option value="assignment">Assignment (PDF)</option>
+          <option value="quiz">Quiz (Google Forms link)</option>
+        </select></div>
+      <div class="field"><label for="title">Title</label><input type="text" id="title" name="title" required maxlength="150"></div>
+      <div class="field"><label for="subject">Subject</label>
+        <select id="subject" name="subject" required>{% for s in subjects %}<option>{{ s }}</option>{% endfor %}</select></div>
+      <div class="field"><label>Share with</label>
+        <label class="aud"><input type="radio" name="audience" value="class" checked> One class (department + semester)</label>
+        <label class="aud"><input type="radio" name="audience" value="department"> All semesters of a department</label>
+        <label class="aud"><input type="radio" name="audience" value="all"> Every student</label>
+        <label class="aud"><input type="radio" name="audience" value="students"> Pick specific students</label>
+      </div>
+      <div class="row2" id="dept_sem_box">
+        <div class="field"><label for="department">Department</label>
+          <select id="department" name="department">{% for d in departments %}<option value="{{ d.code }}" {{ 'selected' if d.code == fac.department }}>{{ d.code }}</option>{% endfor %}</select></div>
+        <div class="field" id="sem_box"><label for="semester">Semester</label>
+          <select id="semester" name="semester">{% for s in semesters %}<option value="{{ s }}">{{ s }}</option>{% endfor %}</select></div>
+      </div>
+      <div class="field" id="students_box" hidden>
+        <label>Choose students</label>
+        <div class="row2" style="margin-bottom:.5rem">
+          <select id="f_dept" aria-label="Filter by department"><option value="">All departments</option>{% for d in departments %}<option value="{{ d.code }}">{{ d.code }}</option>{% endfor %}</select>
+          <select id="f_sem" aria-label="Filter by semester"><option value="">All semesters</option>{% for s in semesters %}<option value="{{ s }}">Sem {{ s }}</option>{% endfor %}</select>
+        </div>
+        <input type="search" id="f_text" placeholder="Search by name or USN" style="margin-bottom:.5rem">
+        <label class="aud" style="font-weight:600"><input type="checkbox" id="stu_all"> Select all shown</label>
+        <div class="stu-list" id="stu_list">
+          {% for st in students %}
+          <label class="stu" data-dept="{{ st.department }}" data-sem="{{ st.semester }}" data-text="{{ (st.usn ~ ' ' ~ st.name)|lower }}">
+            <input type="checkbox" name="student_usns" value="{{ st.usn }}"> <span><b class="mono">{{ st.usn }}</b> {{ st.name }} <span class="muted">&middot; {{ st.department }} Sem {{ st.semester }}</span></span>
+          </label>
+          {% else %}<div class="muted">No students are registered yet.</div>{% endfor %}
+        </div>
+        <div class="hint"><span id="stu_count">0</span> selected</div>
+      </div>
+      <div class="field" id="file_box"><label for="file">PDF file</label>
+        <input type="file" id="file" name="file" accept="application/pdf,.pdf"><div class="hint">PDF only, up to 25 MB.</div></div>
+      <div class="field" id="link_box" hidden><label for="link">Quiz link</label>
+        <input type="url" id="link" name="link" placeholder="https://forms.gle/..."><div class="hint">Paste the link from Google Forms (Send &rarr; link).</div></div>
+      <div class="field"><label for="due_date">Due date <span class="muted" style="font-weight:400">(optional)</span></label><input type="date" id="due_date" name="due_date"></div>
+      <div class="field"><label for="description">Note for students <span class="muted" style="font-weight:400">(optional)</span></label><textarea id="description" name="description" maxlength="1000"></textarea></div>
+      <button class="btn" type="submit" style="width:100%;justify-content:center"><i class="bi bi-cloud-upload"></i> Share with students</button>
+    </form>
+  </div>
+  <div>
+    <h2 style="font-size:1.1rem">What you have shared</h2>
+    {% if items %}<div class="mat-grid">{% for m in items %}{% set delete_url = url_for('faculty_delete_material', mid=m.id) %}{% set show_class = true %}{% include "_material_card.html" %}{% endfor %}</div>
+    {% else %}<div class="panel empty"><i class="bi bi-journal-text"></i>Nothing shared yet. Fill in the form to share your first item.</div>{% endif %}
+  </div>
+</div>
+<script>
+(function () {
+  var kind = document.getElementById('kind'), fileBox = document.getElementById('file_box'), linkBox = document.getElementById('link_box');
+  var file = document.getElementById('file'), link = document.getElementById('link');
+  function syncKind() {
+    var quiz = kind.value === 'quiz';
+    fileBox.hidden = quiz; linkBox.hidden = !quiz;
+    file.required = !quiz; link.required = quiz;
+  }
+  kind.addEventListener('change', syncKind); syncKind();
+
+  var radios = document.querySelectorAll('input[name=audience]');
+  var deptSem = document.getElementById('dept_sem_box'), semBox = document.getElementById('sem_box'), stuBox = document.getElementById('students_box');
+  function mode() { return document.querySelector('input[name=audience]:checked').value; }
+  function syncAudience() {
+    var m = mode();
+    deptSem.hidden = !(m === 'class' || m === 'department');
+    semBox.hidden = m !== 'class';
+    stuBox.hidden = m !== 'students';
+  }
+  radios.forEach(function (r) { r.addEventListener('change', syncAudience); }); syncAudience();
+
+  var rows = Array.prototype.slice.call(document.querySelectorAll('#stu_list .stu'));
+  var fd = document.getElementById('f_dept'), fs = document.getElementById('f_sem'), ft = document.getElementById('f_text');
+  var all = document.getElementById('stu_all'), count = document.getElementById('stu_count');
+  function shown() { return rows.filter(function (r) { return !r.hidden; }); }
+  function updateCount() {
+    var ticked = rows.filter(function (r) { return r.querySelector('input').checked; }).length;
+    count.textContent = ticked;
+    var sh = shown(); all.checked = sh.length > 0 && sh.every(function (r) { return r.querySelector('input').checked; });
+  }
+  function filter() {
+    var t = ft.value.trim().toLowerCase();
+    rows.forEach(function (r) {
+      r.hidden = (fd.value && r.dataset.dept !== fd.value) || (fs.value && r.dataset.sem !== fs.value) || (t && r.dataset.text.indexOf(t) < 0);
+    });
+    updateCount();
+  }
+  [fd, fs].forEach(function (e) { e.addEventListener('change', filter); }); ft.addEventListener('input', filter);
+  all.addEventListener('change', function () { shown().forEach(function (r) { r.querySelector('input').checked = all.checked; }); updateCount(); });
+  rows.forEach(function (r) { r.querySelector('input').addEventListener('change', updateCount); });
+  document.getElementById('mform').addEventListener('submit', function (e) {
+    if (mode() === 'students' && !rows.some(function (r) { return r.querySelector('input').checked; })) {
+      e.preventDefault(); alert('Tick at least one student.');
+    }
+  });
+})();
+</script>
+{% endif %}
+{% endblock %}

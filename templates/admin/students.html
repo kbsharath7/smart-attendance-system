@@ -1,0 +1,43 @@
+{% extends "dash.html" %}
+{% block title %}Students - Admin{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Students</h1><p>Register a student and capture their face for recognition.</p></div></div>
+<div class="grid g-side">
+  <div class="panel" style="align-self:start">
+    <h2>Add student</h2>
+    <form method="post" id="addForm">
+      <div class="field"><label for="usn">USN</label><input type="text" id="usn" name="usn" required placeholder="e.g. 1AB21CS001" style="text-transform:uppercase"></div>
+      <div class="field"><label for="name">Full name</label><input type="text" id="name" name="name" required></div>
+      <div class="row2">
+        <div class="field"><label for="semester">Semester</label>
+          <select id="semester" name="semester" required><option value="">Select</option>{% for s in semesters %}<option value="{{ s }}">{{ s }}</option>{% endfor %}</select></div>
+        <div class="field"><label for="department">Department</label>
+          <select id="department" name="department" required><option value="">Select</option>{% for d in departments %}<option value="{{ d.code }}">{{ d.code }}</option>{% endfor %}</select></div>
+      </div>
+      <div class="notice"><i class="bi bi-camera"></i> A camera window opens on this computer. Press <b>c</b> to capture (5 samples), or <b>q</b> to finish early.</div>
+      <button class="btn" type="submit" style="width:100%;justify-content:center"><i class="bi bi-camera-video"></i> Register and capture face</button>
+    </form>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h2>Registered students ({{ students|length }})</h2></div>
+    {% if students %}
+    <div class="table-wrap"><table>
+      <thead><tr><th>USN</th><th>Name</th><th>Dept</th><th>Sem</th><th>Face samples</th><th></th></tr></thead>
+      <tbody>
+      {% for s in students %}
+      <tr>
+        <td><b>{{ s.usn }}</b></td><td>{{ s.name }}</td><td>{{ s.department }}</td><td>{{ s.semester }}</td>
+        <td>{% if s.faces %}<span class="pill good">{{ s.faces }} saved</span>{% else %}<span class="pill bad">None</span>{% endif %}</td>
+        <td style="white-space:nowrap;text-align:right">
+          <form class="inline" method="post" action="{{ url_for('admin_recapture', usn=s.usn) }}"><button class="btn btn-outline btn-sm" title="Capture more face samples"><i class="bi bi-camera"></i> Add samples</button></form>
+          <form class="inline" method="post" action="{{ url_for('admin_delete_student', usn=s.usn) }}" onsubmit="return confirm('Remove {{ s.usn }} and all their attendance records?')"><button class="btn btn-danger btn-sm" aria-label="Remove {{ s.usn }}"><i class="bi bi-trash"></i></button></form>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    {% else %}<div class="empty"><i class="bi bi-person-plus"></i>No students yet. Fill in the form to register the first one.</div>{% endif %}
+  </div>
+</div>
+{% endblock %}

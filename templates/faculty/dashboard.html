@@ -1,0 +1,64 @@
+{% extends "dash.html" %}
+{% from "_macros.html" import pct_cell, pct_pill with context %}
+{% block title %}My subjects - Faculty{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>My subjects</h1><p>Attendance for the classes you have recorded.</p></div>
+  {% if subjects|length > 1 %}
+  <form method="get" class="filters" style="margin:0"><div class="field"><label for="subject">Subject</label>
+    <select id="subject" name="subject" onchange="this.form.submit()">{% for s in subjects %}<option {{ 'selected' if s == subject }}>{{ s }}</option>{% endfor %}</select></div></form>
+  {% endif %}
+</div>
+
+{% if not sessions %}
+<div class="panel empty"><i class="bi bi-camera-video"></i><b>No attendance recorded for {{ subject }} yet.</b><br>Take your first class attendance to see statistics here.<br><br>
+  <a class="btn btn-amber" href="{{ url_for('faculty_attendance') }}">Take attendance</a></div>
+{% else %}
+<div class="tiles">
+  <div class="tile"><b class="mono">{{ sessions|length }}</b><span>Classes held ({{ subject }})</span></div>
+  <div class="tile mint"><b class="mono">{{ avg }}%</b><span>Average attendance</span></div>
+  <div class="tile"><b class="mono">{{ students|length }}</b><span>Students tracked</span></div>
+  <div class="tile coral"><b class="mono">{{ low|length }}</b><span>Below {{ THRESHOLD }}%</span></div>
+</div>
+<div class="grid g2" style="margin-bottom:1.25rem">
+  <div class="panel"><div class="panel-head"><h2>Attendance per class</h2></div><div class="chart-box"><canvas id="trend"></canvas></div></div>
+  <div class="panel"><div class="panel-head"><h2>Students by attendance band</h2></div><div class="chart-box"><canvas id="bands"></canvas></div></div>
+</div>
+<div class="panel">
+  <div class="panel-head"><h2>Students in {{ subject }}</h2></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>USN</th><th>Name</th><th>Class</th><th>Present / Total</th><th>Attendance</th><th>Status</th><th></th></tr></thead>
+    <tbody>{% for s in students %}<tr><td><b>{{ s.usn }}</b></td><td>{{ s.name }}</td><td>{{ s.department }}-{{ s.semester }}</td><td class="mono">{{ s.present }} / {{ s.total }}</td><td>{{ pct_cell(s.percent) }}</td><td>{{ pct_pill(s.percent) }}</td><td><a class="btn btn-outline btn-sm" href="{{ url_for('faculty_report_student', usn=s.usn) }}" title="Excel report"><i class="bi bi-file-earmark-spreadsheet"></i></a></td></tr>{% endfor %}</tbody>
+  </table></div>
+</div>
+{% endif %}
+
+{% if monitors %}
+<div class="panel" style="margin-top:1.25rem">
+  <div class="panel-head"><h2>Recent class monitoring</h2><a class="btn btn-outline btn-sm" href="{{ url_for('faculty_monitor') }}">Start new</a></div>
+  <div class="table-wrap"><table><thead><tr><th>When</th><th>Subject</th><th>Class</th><th>Engagement</th><th></th></tr></thead>
+    <tbody>{% for m in monitors %}<tr><td class="mono">{{ m.started_at }}</td><td>{{ m.subject }}</td><td>{{ m.department }}-{{ m.semester }}</td>
+      <td><span class="pill {{ 'good' if m.level == 'High' else ('warn' if m.level == 'Moderate' else 'bad') }}">{{ m.level }} &middot; {{ m.overall_engagement }}%</span></td>
+      <td style="text-align:right"><a class="btn btn-outline btn-sm" href="{{ url_for('faculty_monitor_result', mid=m.id) }}">View</a></td></tr>{% endfor %}</tbody></table></div>
+</div>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+{% if sessions %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+const trend = {{ trend|tojson }}, bands = {{ bands|tojson }};
+new Chart(document.getElementById('trend'), {
+  type: 'line',
+  data: { labels: trend.map(t => t.label), datasets: [{ data: trend.map(t => t.value), borderColor: '#2A5F6E', backgroundColor: 'rgba(42,95,110,.12)', fill: true, tension: .3, pointRadius: 4 }] },
+  options: { maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.parsed.y + '% present' } } },
+    scales: { y: { min: 0, max: 100, ticks: { callback: v => v + '%' } }, x: { ticks: { maxRotation: 40 } } } }
+});
+new Chart(document.getElementById('bands'), {
+  type: 'doughnut',
+  data: { labels: Object.keys(bands), datasets: [{ data: Object.values(bands), backgroundColor: ['#2E9E7A', '#F2A900', '#D8503F'], borderWidth: 2 }] },
+  options: { maintainAspectRatio: false, cutout: '58%', plugins: { legend: { position: 'bottom' } } }
+});
+</script>
+{% endif %}
+{% endblock %}

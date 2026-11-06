@@ -1,0 +1,34 @@
+{% extends "dash.html" %}
+{% from "_macros.html" import pct_cell, pct_pill with context %}
+{% block title %}Attendance - Admin{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Attendance management</h1><p>Overall attendance across every subject, per student. {{ THRESHOLD }}% is the eligibility line.</p></div></div>
+
+<div class="tiles">
+  <div class="tile"><b class="mono">{{ rows|length }}</b><span>Students shown</span></div>
+  <div class="tile mint"><b class="mono">{{ (avg ~ '%') if avg is not none else '-' }}</b><span>Average attendance</span></div>
+  <div class="tile coral"><b class="mono">{{ low }}</b><span>Below {{ THRESHOLD }}%</span></div>
+</div>
+
+<div class="panel">
+  <form class="filters" method="get">
+    <div class="field"><label for="department">Department</label>
+      <select id="department" name="department"><option value="">All</option>{% for d in departments %}<option value="{{ d.code }}" {{ 'selected' if f_department == d.code }}>{{ d.code }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="semester">Semester</label>
+      <select id="semester" name="semester"><option value="">All</option>{% for s in semesters %}<option value="{{ s }}" {{ 'selected' if f_semester == s }}>{{ s }}</option>{% endfor %}</select></div>
+    <div class="field" style="flex:1"><label for="q">Search</label><input type="search" id="q" name="q" value="{{ f_q }}" placeholder="USN or name"></div>
+    <button class="btn" type="submit"><i class="bi bi-funnel"></i> Apply</button>
+    <a class="btn btn-outline" href="{{ url_for('admin_attendance') }}">Reset</a>
+    <a class="btn btn-amber" href="{{ url_for('admin_report_class', department=f_department, semester=f_semester) }}"><i class="bi bi-file-earmark-spreadsheet"></i> Excel</a>
+  </form>
+  {% if rows %}
+  <div class="table-wrap"><table>
+    <thead><tr><th>USN</th><th>Name</th><th>Dept</th><th>Sem</th><th>Present / Total</th><th>Attendance</th><th>Status</th></tr></thead>
+    <tbody>{% for r in rows %}
+      <tr><td><a href="{{ url_for('admin_student_detail', usn=r.usn) }}"><b>{{ r.usn }}</b></a></td><td>{{ r.name }}</td><td>{{ r.department }}</td><td>{{ r.semester }}</td>
+      <td class="mono">{{ r.present }} / {{ r.total }}</td><td>{{ pct_cell(r.percent) }}</td><td>{{ pct_pill(r.percent) }}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+  {% else %}<div class="empty"><i class="bi bi-search"></i>No students match these filters.</div>{% endif %}
+</div>
+{% endblock %}

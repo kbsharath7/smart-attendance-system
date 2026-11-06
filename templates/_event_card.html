@@ -1,0 +1,12 @@
+<article class="event">
+  <div class="pic">{% if e.image %}<img src="{{ url_for('static', filename='uploads/events/' ~ e.image) }}" alt="{{ e.title }}" loading="lazy">{% else %}<i class="bi bi-megaphone"></i>{% endif %}</div>
+  <div class="body">
+    <h3>{{ e.title }}</h3>
+    <div class="meta">
+      {% if e.event_date %}<span><i class="bi bi-calendar-event"></i> {{ e.event_date }}</span>{% endif %}
+      {% if e.venue %}<span><i class="bi bi-geo-alt"></i> {{ e.venue }}</span>{% endif %}
+    </div>
+    {% if e.description %}<p>{{ e.description }}</p>{% endif %}
+    <div class="foot"><span>Posted by {{ e.full_name or e.username or 'you' }}</span>{% if delete_url is defined %}<form method="post" action="{{ delete_url }}" onsubmit="return confirm('Remove this event?')"><button class="btn btn-danger btn-sm" aria-label="Remove event"><i class="bi bi-trash"></i></button></form>{% endif %}</div>
+  </div>
+</article>

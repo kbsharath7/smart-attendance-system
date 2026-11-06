@@ -1,0 +1,12 @@
+flask>=3.0
+numpy
+opencv-python
+scikit-learn
+pillow
+tensorflow==2.15.*      # your FaceNet code uses tf.compat.v1 / gfile.FastGFile
+deepface                # emotion detection (runs in its own process: emotion_worker.py)
+# optional voice feedback in recognition.py --voice
+gTTS
+pygame
+mutagen
+openpyxl                # Excel reports

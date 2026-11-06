@@ -1,0 +1,37 @@
+{% extends "dash.html" %}
+{% block title %}{{ heading }} - {{ PROJECT_TITLE }}{% endblock %}
+{% block content %}
+<h1>{{ heading }}</h1>
+<p class="muted">{{ lead }}</p>
+
+{% if rows %}
+<div class="panel" style="overflow-x:auto">
+  <table style="width:100%;border-collapse:collapse">
+    <thead>
+      <tr style="text-align:left;border-bottom:1px solid #d6dedc">
+        <th style="padding:.5rem">When</th>
+        <th style="padding:.5rem">Student</th>
+        <th style="padding:.5rem">Subject / date</th>
+        <th style="padding:.5rem">Change</th>
+        <th style="padding:.5rem">Reason</th>
+        {% if show_faculty %}<th style="padding:.5rem">By</th>{% endif %}
+      </tr>
+    </thead>
+    <tbody>
+    {% for r in rows %}
+      <tr style="border-bottom:1px solid #eef2f1">
+        <td style="padding:.6rem .5rem"><small class="mono">{{ (r.created_at or '')[:16] }}</small></td>
+        <td style="padding:.6rem .5rem"><b>{{ r.name or r.usn }}</b><br><small class="muted">{{ r.usn }}</small></td>
+        <td style="padding:.6rem .5rem">{{ r.subject }}<br><small class="muted">{{ r.class_date }}</small></td>
+        <td style="padding:.6rem .5rem">{% if r.action == 'Present' %}<span class="pill good">Marked present</span>{% else %}<span class="pill bad">Marked absent</span>{% endif %}</td>
+        <td style="padding:.6rem .5rem">{{ r.reason }}</td>
+        {% if show_faculty %}<td style="padding:.6rem .5rem">{{ r.full_name or r.username }}</td>{% endif %}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="panel empty"><i class="bi bi-journal-check"></i>No manual changes have been made yet.</div>
+{% endif %}
+{% endblock %}

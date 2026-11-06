@@ -1,0 +1,25 @@
+{% extends "dash.html" %}
+{% block title %}Events - Faculty{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Events</h1><p>Post an announcement with an image. Students see it on their dashboard.</p></div></div>
+<div class="grid g-side">
+  <div class="panel" style="align-self:start">
+    <h2>New event</h2>
+    <form method="post" enctype="multipart/form-data">
+      <div class="field"><label for="title">Title</label><input type="text" id="title" name="title" required></div>
+      <div class="row2">
+        <div class="field"><label for="event_date">Date</label><input type="date" id="event_date" name="event_date"></div>
+        <div class="field"><label for="venue">Venue</label><input type="text" id="venue" name="venue"></div>
+      </div>
+      <div class="field"><label for="description">Details</label><textarea id="description" name="description"></textarea></div>
+      <div class="field"><label for="image">Image</label><input type="file" id="image" name="image" accept="image/png,image/jpeg,image/gif,image/webp"><div class="hint">PNG, JPG, GIF or WEBP, up to 6 MB.</div></div>
+      <button class="btn" type="submit" style="width:100%;justify-content:center"><i class="bi bi-megaphone"></i> Publish event</button>
+    </form>
+  </div>
+  <div>
+    <h2 style="font-size:1.1rem">Your published events</h2>
+    {% if events %}<div class="events">{% for e in events %}{% set delete_url = url_for('faculty_delete_event', eid=e.id) %}{% include "_event_card.html" %}{% endfor %}</div>
+    {% else %}<div class="panel empty"><i class="bi bi-megaphone"></i>No events yet. Fill in the form to publish your first one.</div>{% endif %}
+  </div>
+</div>
+{% endblock %}

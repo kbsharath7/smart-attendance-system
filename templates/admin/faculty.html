@@ -1,0 +1,96 @@
+{% extends "dash.html" %}
+{% block title %}Faculty - Admin{% endblock %}
+{% block content %}
+<style>#picker div.check[hidden]{display:none !important}</style>
+<div class="page-head"><div><h1>Faculty</h1><p>Create sign-in accounts for the people who take attendance.</p></div></div>
+<div class="grid g-side">
+  <div class="panel" style="align-self:start">
+    <h2>Add faculty</h2>
+    <form method="post">
+      <div class="field"><label for="full_name">Full name</label><input type="text" id="full_name" name="full_name" placeholder="Optional"></div>
+      <div class="field"><label for="username">Username</label><input type="text" id="username" name="username" required autocomplete="off"></div>
+      <div class="field"><label for="password">Password</label><input type="password" id="password" name="password" required minlength="6" autocomplete="new-password"><div class="hint">At least 6 characters.</div></div>
+      <div class="field"><label for="department">Department</label>
+        <select id="department" name="department" required><option value="">Select</option>{% for d in departments %}<option value="{{ d.code }}">{{ d.code }} - {{ d.name }}</option>{% endfor %}</select></div>
+      <div class="field"><label>Subjects this faculty can handle</label>
+        <div class="subject-picker" id="picker">
+          {% for sj in catalog %}
+          <div class="sub-item" data-dept="{{ sj.department }}" hidden>
+            <label class="check" style="flex:1"><input type="checkbox" name="subjects" value="{{ sj.name }}" disabled>
+              <span><b>{{ sj.name }}</b><small>{{ 'All departments' if sj.department == 'ALL' else sj.department }} {% if sj.semester %}&middot; Semester {{ sj.semester }}{% else %}&middot; Added by admin{% endif %}</small></span></label>
+            <label class="lab-tick" style="opacity:.5">
+              <input type="checkbox" name="lab_subjects" value="{{ sj.name }}" {{ 'checked' if sj.has_lab }} disabled> Has lab</label>
+          </div>
+          {% endfor %}
+          <div class="muted" id="pickHint">Choose a department to see its subjects.</div>
+        </div>
+        <div class="custom-subj">
+          <label for="custom_name">Subject not in the list? Type its name</label>
+          <div class="custom-row">
+            <input type="text" id="custom_name" maxlength="80" placeholder="e.g. Machine Learning Lab" autocomplete="off">
+            <label class="lab-tick"><input type="checkbox" id="custom_lab"> Has lab</label>
+            <button type="button" class="btn btn-outline" id="custom_add"><i class="bi bi-plus-lg"></i> Add</button>
+          </div>
+          <div class="chips" id="custom_list" style="margin-top:.5rem"></div>
+          <div class="hint">Added subjects are saved for this department and will appear in the list next time.</div>
+        </div></div>
+      <button class="btn" type="submit" style="width:100%;justify-content:center"><i class="bi bi-person-plus"></i> Create faculty account</button>
+    </form>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><h2>Faculty accounts ({{ faculty|length }})</h2></div>
+    {% if faculty %}
+    <div class="table-wrap"><table>
+      <thead><tr><th>Username</th><th>Name</th><th>Dept</th><th>Subjects</th><th></th></tr></thead>
+      <tbody>{% for f in faculty %}
+        <tr><td><b>{{ f.username }}</b></td><td>{{ f.full_name or '-' }}</td><td>{{ f.department }}</td>
+        <td><div class="chips">{% for s in f.subject_list %}<span class="chip">{{ s }}</span>{% endfor %}</div></td>
+        <td style="text-align:right"><form class="inline" method="post" action="{{ url_for('admin_delete_faculty', fid=f.id) }}" onsubmit="return confirm('Remove {{ f.username }}?')"><button class="btn btn-danger btn-sm" aria-label="Remove {{ f.username }}"><i class="bi bi-trash"></i></button></form></td></tr>
+      {% endfor %}</tbody>
+    </table></div>
+    {% else %}<div class="empty"><i class="bi bi-person-workspace"></i>No faculty yet. Create the first account with the form.</div>{% endif %}
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script>
+const dep = document.getElementById('department'), items = [...document.querySelectorAll('#picker .sub-item')], hint = document.getElementById('pickHint');
+function syncLab(el) {                       // the "Has lab" box only works while its subject is ticked
+  const subj = el.querySelector('input[name=subjects]'), lab = el.querySelector('input[name=lab_subjects]'), wrap = el.querySelector('.lab-tick');
+  lab.disabled = subj.disabled || !subj.checked;
+  wrap.style.opacity = lab.disabled ? '.5' : '1';
+}
+function filterSubjects() {
+  items.forEach(el => { const show = dep.value && (el.dataset.dept === dep.value || el.dataset.dept === 'ALL');
+    el.hidden = !show; const box = el.querySelector('input[name=subjects]'); box.disabled = !show; if (!show) box.checked = false; syncLab(el); });
+  hint.style.display = dep.value ? 'none' : 'block';
+}
+items.forEach(el => el.querySelector('input[name=subjects]').addEventListener('change', () => syncLab(el)));
+dep.addEventListener('change', filterSubjects); filterSubjects();
+
+// ---- subjects typed by the admin
+const cName = document.getElementById('custom_name'), cLab = document.getElementById('custom_lab'),
+      cList = document.getElementById('custom_list'), cAdd = document.getElementById('custom_add');
+function addCustom() {
+  const name = cName.value.replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!name) { cName.focus(); return; }
+  if (!dep.value) { alert('Choose the department first.'); dep.focus(); return; }
+  const lower = name.toLowerCase();
+  const listed = items.find(el => !el.hidden && el.querySelector('input[name=subjects]').value.toLowerCase() === lower);
+  if (listed) {                                   // already in the list: just tick it
+    listed.querySelector('input[name=subjects]').checked = true; syncLab(listed);
+    if (cLab.checked) { const l = listed.querySelector('input[name=lab_subjects]'); l.checked = true; }
+  } else if (![...cList.querySelectorAll('input[name=custom_subject]')].some(i => i.value.toLowerCase() === lower)) {
+    const chip = document.createElement('span'); chip.className = 'chip';
+    const h = document.createElement('input'); h.type = 'hidden'; h.name = 'custom_subject'; h.value = name; chip.appendChild(h);
+    if (cLab.checked) { const l = document.createElement('input'); l.type = 'hidden'; l.name = 'custom_lab'; l.value = name; chip.appendChild(l); }
+    chip.appendChild(document.createTextNode(name + (cLab.checked ? ' (lab)' : '') + ' '));
+    const x = document.createElement('button'); x.type = 'button'; x.textContent = '\u00d7'; x.setAttribute('aria-label', 'Remove ' + name);
+    x.style.cssText = 'border:0;background:none;cursor:pointer;font-weight:700'; x.onclick = () => chip.remove();
+    chip.appendChild(x); cList.appendChild(chip);
+  }
+  cName.value = ''; cLab.checked = false; cName.focus();
+}
+cAdd.addEventListener('click', addCustom);
+cName.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addCustom(); } });
+dep.addEventListener('change', () => { cList.innerHTML = ''; });   // typed subjects belong to the chosen department
+</script>{% endblock %}

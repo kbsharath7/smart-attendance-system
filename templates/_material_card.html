@@ -1,0 +1,22 @@
+<article class="mat-card">
+  <div style="display:flex;justify-content:space-between;gap:.5rem;align-items:center">
+    <span class="pill k-{{ m.kind }}">{{ kinds[m.kind] }}</span>
+    <span class="mat-meta mono">{{ (m.created_at or '')[:10] }}</span>
+  </div>
+  <h3>{{ m.title }}</h3>
+  <div class="mat-meta">{{ m.subject }}{% if show_class %}{% set aud = m.audience or 'class' %} &middot; {% if aud == 'class' %}Sem {{ m.semester }} {{ m.department }}{% elif aud == 'department' %}All semesters of {{ m.department }}{% elif aud == 'all' %}Every student{% else %}{{ m.n_students }} selected student{{ 's' if m.n_students != 1 }}{% endif %}{% endif %}{% if m.full_name or m.username %} &middot; {{ m.full_name or m.username }}{% endif %}</div>
+  {% if m.description %}<div style="font-size:.92rem;white-space:pre-line">{{ m.description }}</div>{% endif %}
+  {% if m.due_date %}<div class="mat-meta"><i class="bi bi-calendar-event"></i> Due: <b class="mono">{{ m.due_date }}</b></div>{% endif %}
+  <div class="mat-actions">
+    {% if m.kind == 'quiz' %}
+      <a class="btn btn-sm" href="{{ m.link }}" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> Open quiz</a>
+    {% else %}
+      <a class="btn btn-sm" href="{{ url_for('material_download', mid=m.id) }}"><i class="bi bi-download"></i> Download PDF</a>
+    {% endif %}
+    {% if delete_url %}
+      <form method="post" action="{{ delete_url }}" onsubmit="return confirm('Remove this from students?');" style="margin:0">
+        <button class="btn btn-outline btn-sm" type="submit"><i class="bi bi-trash"></i> Remove</button>
+      </form>
+    {% endif %}
+  </div>
+</article>

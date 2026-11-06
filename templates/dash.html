@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block body %}
+{% set ep = request.endpoint or '' %}
+<div class="shell">
+  <aside class="sidebar">
+    <a class="brand" href="{{ url_for('home') }}"><span class="brand-mark"><i class="bi bi-person-bounding-box"></i></span>Attendance &amp; Engagement</a>
+    <div class="who"><b>{{ session.name }}</b><span>{{ {'admin':'Administrator','faculty':'Faculty','student':'Student'}[session.role] }}</span></div>
+    <nav class="side-nav" aria-label="Main">
+      {% if session.role == 'admin' %}
+        <a href="{{ url_for('admin_dashboard') }}" class="{{ 'on' if ep == 'admin_dashboard' }}"><i class="bi bi-grid-1x2"></i> Overview</a>
+        <a href="{{ url_for('admin_students') }}" class="{{ 'on' if ep == 'admin_students' }}"><i class="bi bi-person-plus"></i> Students</a>
+        <a href="{{ url_for('admin_faculty') }}" class="{{ 'on' if ep == 'admin_faculty' }}"><i class="bi bi-person-workspace"></i> Faculty</a>
+        <a href="{{ url_for('admin_attendance') }}" class="{{ 'on' if ep in ('admin_attendance','admin_student_detail') }}"><i class="bi bi-clipboard-data"></i> Attendance</a>
+        <a href="{{ url_for('admin_reports') }}" class="{{ 'on' if ep == 'admin_reports' }}"><i class="bi bi-file-earmark-spreadsheet"></i> Reports</a>
+      {% elif session.role == 'faculty' %}
+        <a href="{{ url_for('faculty_dashboard') }}" class="{{ 'on' if ep == 'faculty_dashboard' }}"><i class="bi bi-bar-chart-line"></i> My subjects</a>
+        <a href="{{ url_for('faculty_attendance') }}" class="{{ 'on' if ep.startswith('faculty_attendance') }}"><i class="bi bi-camera-video"></i> Take attendance</a>
+        <a href="{{ url_for('faculty_monitor') }}" class="{{ 'on' if ep.startswith('faculty_monitor') }}"><i class="bi bi-emoji-smile"></i> Class monitoring</a>
+        <a href="{{ url_for('faculty_marks') }}" class="{{ 'on' if ep == 'faculty_marks' }}"><i class="bi bi-pencil-square"></i> Marks</a>
+        <a href="{{ url_for('faculty_materials') }}" class="{{ 'on' if ep == 'faculty_materials' }}"><i class="bi bi-journal-arrow-up"></i> Study material</a>
+        <a href="{{ url_for('faculty_leaves') }}" class="{{ 'on' if ep == 'faculty_leaves' }}"><i class="bi bi-calendar-check"></i> Leave requests{% if pending_leaves %}<span class="badge">{{ pending_leaves }}</span>{% endif %}</a>
+        <a href="{{ url_for('faculty_events') }}" class="{{ 'on' if ep == 'faculty_events' }}"><i class="bi bi-megaphone"></i> Events</a>
+        <a href="{{ url_for('faculty_reports') }}" class="{{ 'on' if ep == 'faculty_reports' }}"><i class="bi bi-file-earmark-spreadsheet"></i> Reports</a>
+      {% else %}
+        <a href="{{ url_for('student_dashboard') }}" class="{{ 'on' if ep == 'student_dashboard' }}"><i class="bi bi-house-heart"></i> My progress</a>
+        <a href="{{ url_for('student_materials') }}" class="{{ 'on' if ep == 'student_materials' }}"><i class="bi bi-journal-text"></i> Study material</a>
+        <a href="{{ url_for('student_events') }}" class="{{ 'on' if ep == 'student_events' }}"><i class="bi bi-megaphone"></i> Events</a>
+        <a href="{{ url_for('student_leave') }}" class="{{ 'on' if ep == 'student_leave' }}"><i class="bi bi-calendar-check"></i> Leave</a>
+      {% endif %}
+    </nav>
+    <div class="side-foot">
+      <a class="btn btn-ghost btn-sm" style="color:#cfe0dd" href="{{ url_for('home') }}"><i class="bi bi-house"></i> Home</a>
+      <a class="btn btn-ghost btn-sm" style="color:#cfe0dd" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Sign out</a>
+    </div>
+  </aside>
+  <main class="main">
+    {% include "_flashes.html" %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+{% endblock %}
