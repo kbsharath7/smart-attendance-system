@@ -1,5 +1,24 @@
 # Attendance system and student emotion based engagement prediction
 
+## Screenshots
+
+### Software
+
+| Faculty dashboard | Admin overview |
+|---|---|
+| ![Faculty dashboard](images/faculty_dashboard.png) | ![Admin overview](images/admin_overview.png) |
+
+### Hardware
+
+| Full setup | Sensors and controller close-up |
+|---|---|
+| ![Hardware setup](images/hardware_setup.jpeg) | ![Sensors close-up](images/sensors_closeup.jpeg) |
+
+## Dashboards
+* **Admin:** overview, students, faculty, attendance and reports.
+* **Faculty:** my subjects, take attendance, class monitoring, marks, study material, leave requests, events and reports.
+* **Student:** personal dashboard with attendance, study material, leave requests, events, and their own Excel report.
+
 ## Folder layout
 ```
 attendance_app/
@@ -43,3 +62,46 @@ Admin login: `admin` / `admin123`. Faculty accounts are created by the admin.
 * Events: images are saved to `static/uploads/events/`.
 * Leave requests go to faculty of the student's department, and to faculty who have taught that student's class. Approved leave is flagged on the attendance review screen.
 * Excel: admin (Reports page, Attendance page, student page), faculty (Reports page, student rows, monitoring results) and students (their own report).
+
+---
+
+## Hardware: ESP32 Classroom Occupancy Model
+
+A small classroom model that senses occupancy and room conditions, controls appliances through relays, and sends alerts on Telegram. Code: `hardware/esp32_classroom_occupancy/esp32_classroom_occupancy.ino`
+
+### Components
+* ESP32 DevKit (main controller with WiFi)
+* IR sensor modules, left and right (detect people)
+* LDR light sensor module (darkness detection)
+* Flame sensor module (fire detection)
+* DHT11 (temperature and humidity)
+* 4-channel relay module
+* 16x2 LCD
+* DC motor with motor driver
+* Fan and mini water pump
+* Battery and power supply
+
+### Behaviour
+* Fire detected: LCD shows `FIRE DETECTED`, Relay 1 turns on, Telegram alert is sent.
+* Temperature above 30 C with someone present: Relay 2 turns on for cooling.
+* Dark room with left or right IR triggered: Relay 3 or Relay 4 turns on the matching light.
+* Left and right IR sensors move the motor forward or backward automatically.
+* Serial commands `F`, `B`, `S` (9600 baud) give manual forward, backward and stop.
+
+### Pin mapping
+| Function | ESP32 pin |
+|---|---|
+| LCD RS, EN, D4, D5, D6, D7 | 13, 12, 14, 27, 26, 25 |
+| Left IR, Right IR | 15, 2 |
+| LDR, Flame sensor | 4, 18 |
+| DHT11 | 5 |
+| Relays 1 to 4 | 19, 21, 22, 23 |
+| Motor driver IN1, IN2 | 33, 32 |
+
+### Upload the code
+1. Install the Arduino IDE and ESP32 board support.
+2. Install the libraries: DHT sensor library, UniversalTelegramBot, ArduinoJson.
+3. Open the `.ino` file and replace the placeholders `YOUR_WIFI_NAME`, `YOUR_WIFI_PASSWORD`, `YOUR_TELEGRAM_BOT_TOKEN` and `YOUR_TELEGRAM_CHAT_ID` with your own values.
+4. Select **ESP32 Dev Module** and the correct COM port, then upload.
+
+Never commit your real WiFi password or Telegram bot token to GitHub.
